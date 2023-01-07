@@ -1,0 +1,2 @@
+# TranslateMauiBlazor
+TranslateMauiBlazor
