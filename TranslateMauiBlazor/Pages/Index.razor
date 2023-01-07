@@ -1,0 +1,47 @@
+﻿@page "/"
+
+@using System.Timers;
+@using Newtonsoft.Json;
+@using System.Text;
+@using TranslateMauiBlazor.Models;
+@using TranslateMauiBlazor.Services;
+@implements IDisposable;
+@inject ITranslateService TranslateService;
+
+<input type="text" @bind="Data" @bind:event="oninput" 
+       @onkeyup="@ResetTimer"/>
+<p >UI Data: @Data
+<br>Backend Data: @DataFromBackend</p>
+
+@code {
+    public string Data { get; set; } = string.Empty;
+    public string DataFromBackend { get; set; } = string.Empty;
+    private Timer aTimer = default!;
+    protected override void OnInitialized()
+    {
+        aTimer = new Timer(1000);
+        aTimer.Elapsed += OnUserFinish;
+        aTimer.AutoReset = false;
+    }
+    void ResetTimer(KeyboardEventArgs e)
+    {
+        aTimer.Stop();
+        aTimer.Start();
+    }
+    void IDisposable.Dispose() => aTimer?.Dispose();
+
+    private async void OnUserFinish(Object source, ElapsedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(Data))
+        {
+            string[] languages = new string[] { "fr", "zu", "vi", "en" };
+            List<TranslateModel> translations = await TranslateService.TranslateLanguage(Data, languages);
+
+            string result = JsonConvert.SerializeObject(translations, Formatting.Indented);
+
+            DataFromBackend = await Task.FromResult(result + " from backend");
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+      
+}

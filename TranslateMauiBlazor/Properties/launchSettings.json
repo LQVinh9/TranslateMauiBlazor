@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Windows Machine": {
+      "commandName": "MsixPackage",
+      "nativeDebugging": false
+    }
+  },
+  "Key": "b2f2458f22104ae8a34969a3f8d1125c"
+}
