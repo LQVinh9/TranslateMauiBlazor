@@ -1,6 +1,7 @@
 ﻿@page "/"
 
 @using System.Timers;
+@using CommunityToolkit.Maui.Core;
 @using Newtonsoft.Json;
 @using System.Text;
 @using System.Globalization;
@@ -8,34 +9,46 @@
 @using TranslateMauiBlazor.Models;
 @using TranslateMauiBlazor.Services;
 @using System.Linq;
+@using AntDesign;
+@using CommunityToolkit.Maui.Alerts;
+
 @implements IDisposable;
+
 @inject ITranslateService TranslateService;
 @inject ICultureService CultureService;
-@using AntDesign;
 @inject INotificationService _notice
 
-<p class="font-title">TRANSLATE TEXT TO ANOTHER LANGUAGE</p>
+<img class="center" src="images/translate.png" alt="image translate" width="70">
+
+<p class="font-title">TRANSLATE TEXT TO MANY OTHER LANGUAGE</p>
 <div class="mb-3">
-  <label class="form-label font-b">Text:</label>
-  <textarea class="form-control" @bind="Data" @bind:event="oninput" @onkeyup="@ResetTimer" rows="3" placeholder="Enter text"></textarea>
+    <label class="form-label font-b">Text:</label>
+    <textarea class="form-control" @bind="Data" @bind:event="oninput" @onkeydown="@ResetTimer" rows="3" placeholder="Enter text"></textarea>
 </div>
+
+@if (format != null)
+{
+    <div class="mb-2">
+         <Progress Percent="@percent" Style="width: 70%;" Format=format Size="@ProgressSize.Default" StrokeColor=_gradients/>
+    </div>
+}
 
 <label class="form-label font-b">Translation:</label>
 <Select Mode="multiple"
-        Placeholder="Select multiple languages"
-		@bind-Values="@selectedValues"
-		TItemValue="string"
-		TItem="string"
-		Style="width: 100%; margin-bottom: 8px;"
-        OnSelectedItemsChanged="OnSelectedItemsChangedHandler"
-		EnableSearch
-		AllowClear>
-        <SelectOptions>
-        @foreach (var culture in Cultures)
-        {
-           <SelectOption TItemValue="string" TItem="string" Value=@culture.Name Label=@culture.EnglishName />
-        }
-        </SelectOptions>
+    Placeholder="Select multiple languages"
+	@bind-Values="@selectedValues"
+	TItemValue="string"
+	TItem="string"
+	Style="width: 100%; margin-bottom: 8px; color: dodgerblue;"
+    OnSelectedItemsChanged="OnSelectedItemsChangedHandler"
+	EnableSearch
+	AllowClear>
+    <SelectOptions>
+    @foreach (var culture in Cultures)
+    {
+         <SelectOption TItemValue="string" TItem="string" Value=@culture.Name Label=@culture.EnglishName />
+    }
+    </SelectOptions>
 </Select>
 
 <Spin Spinning=@loading Style="margin-top: 26px;">
@@ -44,10 +57,12 @@
         @foreach (var translation in translateResult.Translations)
         {
             <div class="card mt-3">
-               <h5 class="card-header">@translation.To</h5>
-               <div class="card-body">
-                  <p class="card-text">@translation.Text</p>
-               </div>
+                <h5 class="card-header" style="background-color:antiquewhite">@translation.To</h5>
+                <div class="card-body">
+                    <p class="card-text">@translation.Text 
+                        <Icon @onclick="() => CopyText(translation.Text)" Type="copy" Theme="outline" Style="font-size:24px; position: absolute; right:10px;"/>
+                    </p>
+                </div>
             </div>
         }
     }
@@ -62,6 +77,8 @@
     private TranslateModel translateResult;
 
     private bool loading = false;
+    private double percent = 0;
+    private Func<double, string> format = null;
 
     protected override void OnInitialized()
     {
@@ -94,8 +111,13 @@
                         translation.To = englishName;
                     });
                     translateResult = translationModel;
+
+                    percent = (translationModel.DetectedLanguage.Score * 100) - 0.1;
+                    var languageDetect = Cultures.Where(e => e.Name.Equals(translationModel.DetectedLanguage.Language)).Select(e => e.EnglishName).FirstOrDefault();
+                    format = (p) => $"{languageDetect} ({Math.Round(percent + 0.1, 2)}%)";
                 }
             }
+            else translateResult = null;
         } catch (Exception){}
         loading = false;
         await InvokeAsync(StateHasChanged);
@@ -110,4 +132,25 @@
             loading = true;
         }
     }
+
+    private async Task CopyText(string text)
+    {
+        await Clipboard.Default.SetTextAsync(text);
+
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        string message = $"'{text}' copied!";
+        ToastDuration duration = ToastDuration.Short;
+        double fontSize = 14;
+
+        var toast = Toast.Make(message, duration, fontSize);
+
+        await toast.Show(cancellationTokenSource.Token);
+    }
+
+    private Dictionary<string, string> _gradients = new()
+    {
+        { "0%", "#108ee9" },
+        { "100%", "#87d068" }
+    };
 }
