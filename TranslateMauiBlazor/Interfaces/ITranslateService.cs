@@ -1,6 +1,6 @@
 ﻿using TranslateMauiBlazor.Models;
 
-namespace TranslateMauiBlazor.Services
+namespace TranslateMauiBlazor.Interfaces
 {
     interface ITranslateService
     {

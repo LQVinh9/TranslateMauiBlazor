@@ -3,45 +3,111 @@
 @using System.Timers;
 @using Newtonsoft.Json;
 @using System.Text;
+@using System.Globalization;
+@using TranslateMauiBlazor.Interfaces;
 @using TranslateMauiBlazor.Models;
 @using TranslateMauiBlazor.Services;
+@using System.Linq;
 @implements IDisposable;
 @inject ITranslateService TranslateService;
+@inject ICultureService CultureService;
+@using AntDesign;
+@inject INotificationService _notice
 
-<input type="text" @bind="Data" @bind:event="oninput" 
-       @onkeyup="@ResetTimer"/>
-<p >UI Data: @Data
-<br>Backend Data: @DataFromBackend</p>
+<p class="font-title">TRANSLATE TEXT TO ANOTHER LANGUAGE</p>
+<div class="mb-3">
+  <label class="form-label font-b">Text:</label>
+  <textarea class="form-control" @bind="Data" @bind:event="oninput" @onkeyup="@ResetTimer" rows="3" placeholder="Enter text"></textarea>
+</div>
+
+<label class="form-label font-b">Translation:</label>
+<Select Mode="multiple"
+        Placeholder="Select multiple languages"
+		@bind-Values="@selectedValues"
+		TItemValue="string"
+		TItem="string"
+		Style="width: 100%; margin-bottom: 8px;"
+        OnSelectedItemsChanged="OnSelectedItemsChangedHandler"
+		EnableSearch
+		AllowClear>
+        <SelectOptions>
+        @foreach (var culture in Cultures)
+        {
+           <SelectOption TItemValue="string" TItem="string" Value=@culture.Name Label=@culture.EnglishName />
+        }
+        </SelectOptions>
+</Select>
+
+<Spin Spinning=@loading Style="margin-top: 26px;">
+    @if (translateResult != null)
+    {
+        @foreach (var translation in translateResult.Translations)
+        {
+            <div class="card mt-3">
+               <h5 class="card-header">@translation.To</h5>
+               <div class="card-body">
+                  <p class="card-text">@translation.Text</p>
+               </div>
+            </div>
+        }
+    }
+</Spin>
 
 @code {
-    public string Data { get; set; } = string.Empty;
-    public string DataFromBackend { get; set; } = string.Empty;
+    private string Data { get; set; } = string.Empty;
+    private List<CultureModel> Cultures { get; set; }
     private Timer aTimer = default!;
+
+    private IEnumerable<string> selectedValues = new List<string>();
+    private TranslateModel translateResult;
+
+    private bool loading = false;
+
     protected override void OnInitialized()
     {
         aTimer = new Timer(1000);
         aTimer.Elapsed += OnUserFinish;
         aTimer.AutoReset = false;
+
+        Cultures = CultureService.GetListCulture();
     }
     void ResetTimer(KeyboardEventArgs e)
     {
         aTimer.Stop();
         aTimer.Start();
+        loading = true;
     }
     void IDisposable.Dispose() => aTimer?.Dispose();
 
     private async void OnUserFinish(Object source, ElapsedEventArgs e)
     {
-        if (!string.IsNullOrEmpty(Data))
+        try{
+            if (!string.IsNullOrEmpty(Data))
+            {
+                var languages = selectedValues.ToArray();
+                if (languages.Length > 0)
+                {
+                    TranslateModel translationModel = (await TranslateService.TranslateLanguage(Data, languages))[0];
+                    translationModel.Translations.ForEach(translation =>
+                    {
+                        string englishName = Cultures.Where(e => e.Name.Equals(translation.To)).Select(e => e.EnglishName).FirstOrDefault();
+                        translation.To = englishName;
+                    });
+                    translateResult = translationModel;
+                }
+            }
+        } catch (Exception){}
+        loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSelectedItemsChangedHandler(IEnumerable<string> values)
+    {
+        if (values != null && values.Count() > 0 && !string.IsNullOrEmpty(Data))
         {
-            string[] languages = new string[] { "fr", "zu", "vi", "en" };
-            List<TranslateModel> translations = await TranslateService.TranslateLanguage(Data, languages);
-
-            string result = JsonConvert.SerializeObject(translations, Formatting.Indented);
-
-            DataFromBackend = await Task.FromResult(result + " from backend");
-            await InvokeAsync(StateHasChanged);
+            aTimer.Stop();
+            aTimer.Start();
+            loading = true;
         }
     }
-      
 }

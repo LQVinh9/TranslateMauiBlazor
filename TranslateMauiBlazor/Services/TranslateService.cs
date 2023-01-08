@@ -1,11 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
 using TranslateMauiBlazor.Common;
+using TranslateMauiBlazor.Interfaces;
 using TranslateMauiBlazor.Models;
 
 namespace TranslateMauiBlazor.Services
 {
-    public class TranslateService : ITranslateService
+    internal class TranslateService : ITranslateService
     {
         public async Task<List<TranslateModel>> TranslateLanguage(string text, string[] languages)
         {

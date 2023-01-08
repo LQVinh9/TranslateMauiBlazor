@@ -50,6 +50,15 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="Resources\Fonts\BanhMi.ttf" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiFont Include="wwwroot\css\open-iconic\font\fonts\BanhMi.ttf" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AntDesign" Version="0.13.2" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     </ItemGroup>

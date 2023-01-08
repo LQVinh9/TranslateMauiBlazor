@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TranslateMauiBlazor.Models
+﻿namespace TranslateMauiBlazor.Models
 {
     public class TranslateModel
     {
         public DetectedLanguage DetectedLanguage { get; set; }
         public List<Item> Translations { get; set; }
+        TranslateModel()
+        {
+            Translations = new();
+        }
     }
 
     public class DetectedLanguage

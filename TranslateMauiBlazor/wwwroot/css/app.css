@@ -82,3 +82,28 @@ a, .btn-link {
         padding-left: env(safe-area-inset-left);
     }
 }
+
+@font-face {
+    font-family: BanhMi;
+    src: url('../css/open-iconic/font/fonts/BanhMi.ttf');
+}
+
+.font-b {
+    font-family: BanhMi;
+    color: #00A2FF;
+    font-size: 16px;
+}
+
+.font-title {
+    font-family: BanhMi;
+    color: #FF9A00;
+    text-align: center;
+    font-size: 18px;
+}
+
+.span-blue {
+    color: azure;
+    background-color: lightseagreen;
+    font-weight: bold;
+    font-family: BanhMi;
+}

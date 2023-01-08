@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using TranslateMauiBlazor.Data;
+using TranslateMauiBlazor.Interfaces;
 using TranslateMauiBlazor.Services;
 
 namespace TranslateMauiBlazor;
@@ -13,7 +14,8 @@ public static class MauiProgram
 			.UseMauiApp<App>()
 			.ConfigureFonts(fonts =>
 			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular")
+				     .AddFont("BanhMi.ttf");
 			});
 
 		builder.Services.AddMauiBlazorWebView();
@@ -25,6 +27,9 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<WeatherForecastService>();
         builder.Services.AddSingleton<ITranslateService, TranslateService>();
+        builder.Services.AddSingleton<ICultureService, CultureService>();
+
+        builder.Services.AddAntDesign();
 
         return builder.Build();
 	}
